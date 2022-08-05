@@ -5,12 +5,12 @@ USE ieee.std_logic_unsigned.ALL;
 USE std.textio.ALL;
 
 ----------- Entidade do Testbench -------
-ENTITY Testbench_MIC_ADDD IS
+ENTITY Testbench_MIC_STOD IS
 
-END Testbench_MIC_ADDD;
+END Testbench_MIC_STOD;
 
 ----------- Arquitetura do Testbench -------
-ARCHITECTURE Type_1 OF Testbench_MIC_ADDD IS
+ARCHITECTURE Type_1 OF Testbench_MIC_STOD IS
 
     CONSTANT Clk_period : TIME := 40 ns;
     SIGNAL Clk_count : INTEGER := 0;
@@ -25,11 +25,11 @@ ARCHITECTURE Type_1 OF Testbench_MIC_ADDD IS
     SIGNAL Signal_Mar : STD_LOGIC := '0';
     SIGNAL Signal_Enc : STD_LOGIC := '0';
     SIGNAL Signal_C_Address : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0000";
-    SIGNAL Signal_C_Input : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL Signal_B_Output : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    --SIGNAL Signal_C_Input : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    --SIGNAL Signal_B_Output : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL Signal_B_Address : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0000";
     SIGNAL Signal_A_Address : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0000";
-    SIGNAL Signal_A_Output : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    --SIGNAL Signal_A_Output : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL Signal_Sh : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
     SIGNAL Signal_Mem_to_mbr : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL Signal_Data_ok : STD_LOGIC := '0';
@@ -109,7 +109,6 @@ Clock_Process : PROCESS
     wait for Clk_period/2;  --for next 0.5 ns signal is '1'.
 
 
-
 IF (Clk_count = 34) THEN     
 REPORT "Stopping simulation after 34 cycles";
     	  Wait;       
@@ -129,14 +128,14 @@ Reset_Process : PROCESS
 
 End Process Reset_Process;
 
-ADDD_Process : PROCESS 
-  Begin
+STOD_Process : PROCESS
+begin
 
   wait for 40 ns; 
 
   -- mbr := mem;
   
-  Signal_Mem_to_mbr <= "0000000000000101"; -- intrucao
+  Signal_Mem_to_mbr <= "0000000000000001"; -- intrucao
   Signal_Data_ok <= '1'; -- Habilita leitura de MBR
 
   wait for 40 ns;
@@ -146,45 +145,20 @@ ADDD_Process : PROCESS
   Signal_Amux <= '1'; -- Com o mbr
   Signal_Alu <= "10"; -- Transparencia
   Signal_Sh <= "00"; -- Nao desloca
+  Signal_Mbr <= '0';
+  Signal_Mar <= '0';
+  Signal_Rd <= '0';
+  Signal_Wr <= '0';
   Signal_Enc <= '1'; -- Habilita gravação no registrador
   Signal_C_Address <= "0010"; 	-- Seleciona AC
+  Signal_B_Address <= "0000";
+  Signal_A_Address <= "0000";
   Signal_Data_ok <= '0';
 
   wait for 40 ns; 
 
     -- mbr := ac;
-    
-    Signal_Enc <= '0'; -- desabilita gravação no registrador
-    Signal_Amux <= '0';
-    Signal_Alu <= "10";
-    Signal_Sh <= "00";
-    Signal_Mbr <= '0';
-    Signal_A_Address <= "0010";
 
-    wait for 40 ns; 
- 
-  -- mbr := mem;
-  
-  Signal_Mem_to_mbr <= "0000000000000011"; -- intrucao
-  Signal_Data_ok <= '1'; -- Habilita leitura de MBR
-
-
-    wait for 40 ns; -- soma
-
-    Signal_Amux <= '1';
-    Signal_Alu <= "00";
-    Signal_Mbr <= '0';
-    Signal_Enc <= '1';
-    Signal_C_Address <= "0010";
-    Signal_B_Address <= "0010";
-    Signal_A_Address <= "0000";
-    Signal_Data_ok <= '0'; -- desabilita leitura de MBR
-
-    wait for 40 ns; 
-
-    -- mbr := ac;
-
-    Signal_Enc <= '0'; -- desabilita gravação no registrador
     Signal_Amux <= '0';
     Signal_Alu <= "10";
     Signal_Sh <= "00";
@@ -193,9 +167,8 @@ ADDD_Process : PROCESS
 
   wait;
 
+    wait;
 
-        
-END Process ADDD_Process;
-
+END Process STOD_Process;
 
 END Type_1;

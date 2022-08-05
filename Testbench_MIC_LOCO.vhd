@@ -5,12 +5,12 @@ USE ieee.std_logic_unsigned.ALL;
 USE std.textio.ALL;
 
 ----------- Entidade do Testbench -------
-ENTITY Testbench_MIC_ADDD IS
+ENTITY Testbench_MIC_LOCO IS
 
-END Testbench_MIC_ADDD;
+END Testbench_MIC_LOCO;
 
 ----------- Arquitetura do Testbench -------
-ARCHITECTURE Type_1 OF Testbench_MIC_ADDD IS
+ARCHITECTURE Type_1 OF Testbench_MIC_LOCO IS
 
     CONSTANT Clk_period : TIME := 40 ns;
     SIGNAL Clk_count : INTEGER := 0;
@@ -25,11 +25,8 @@ ARCHITECTURE Type_1 OF Testbench_MIC_ADDD IS
     SIGNAL Signal_Mar : STD_LOGIC := '0';
     SIGNAL Signal_Enc : STD_LOGIC := '0';
     SIGNAL Signal_C_Address : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0000";
-    SIGNAL Signal_C_Input : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL Signal_B_Output : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL Signal_B_Address : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0000";
     SIGNAL Signal_A_Address : STD_LOGIC_VECTOR(3 DOWNTO 0) := "0000";
-    SIGNAL Signal_A_Output : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL Signal_Sh : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
     SIGNAL Signal_Mem_to_mbr : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL Signal_Data_ok : STD_LOGIC := '0';
@@ -108,9 +105,7 @@ Clock_Process : PROCESS
     Clk_count <= Clk_count + 1;
     wait for Clk_period/2;  --for next 0.5 ns signal is '1'.
 
-
-
-IF (Clk_count = 34) THEN     
+IF (Clk_count = 10) THEN     
 REPORT "Stopping simulation after 34 cycles";
     	  Wait;       
 END IF;
@@ -129,73 +124,55 @@ Reset_Process : PROCESS
 
 End Process Reset_Process;
 
-ADDD_Process : PROCESS 
-  Begin
+--    LOCO PROCESS
+--O:  mar := pc; rd;
+--1:  pc := pc + 1; rd;
+--2:  ir := mbr; ir n then goto 28;
+--3:  tir := lshift (ir + ir); if n then goto 19;
+--19: tir := lshift (tir); if n then goto 25;
+--25: alu := tir; if n then goto 27;
+--27: ac := band (ir, amask); goto 0;
 
-  wait for 40 ns; 
+LOCO_Process : PROCESS
+    Begin   
 
-  -- mbr := mem;
-  
-  Signal_Mem_to_mbr <= "0000000000000101"; -- intrucao
-  Signal_Data_ok <= '1'; -- Habilita leitura de MBR
+    wait for 40 ns; -- mbr := x;
 
-  wait for 40 ns;
+    Signal_Mem_to_mbr <= "0111000000000111"; -- Instrução
+    Signal_Data_ok <= '1'; -- Habilita a leitura do MBR 
 
-  -- ac := mbr;
+    wait for 40 ns; -- ir := mbr;
 
-  Signal_Amux <= '1'; -- Com o mbr
-  Signal_Alu <= "10"; -- Transparencia
-  Signal_Sh <= "00"; -- Nao desloca
-  Signal_Enc <= '1'; -- Habilita gravação no registrador
-  Signal_C_Address <= "0010"; 	-- Seleciona AC
-  Signal_Data_ok <= '0';
+    Signal_C_Address <= "0011"; -- Seleciona o registrador IR
+    Signal_Amux <= '1'; -- Amux seleciona o valor de MBR 
+    Signal_Alu <= "10"; -- Operação de transparência
+    Signal_Sh <= "00"; -- Não desloca o resultado da ALU
+    Signal_Enc <= '1'; -- Habilita gravação 
 
-  wait for 40 ns; 
+    wait for 40 ns; -- ac := band (ir, amask);
 
-    -- mbr := ac;
+    Signal_C_Address <= "0001"; -- Seleciona AC
+    Signal_B_Address <= "0011"; -- Seleciona IR
+    Signal_A_Address <= "1000"; -- Seleciona AMASK
+    Signal_Amux <= '0'; -- Seleciona o barramento A
+    Signal_Alu <= "01"; -- Operação AND
+    Signal_Sh <= "00"; -- Não deslocará o resultado
+    Signal_Enc <= '1'; -- Habilita gravação
+
+
+    wait for 40 ns; -- mbr := ac;
     
-    Signal_Enc <= '0'; -- desabilita gravação no registrador
-    Signal_Amux <= '0';
-    Signal_Alu <= "10";
-    Signal_Sh <= "00";
-    Signal_Mbr <= '0';
-    Signal_A_Address <= "0010";
+    Signal_Amux <= '0'; -- Seleciona o barramento A
+    Signal_Alu <= "10"; -- Transparência
+    Signal_Sh <= "00"; -- Não deslocará o resultado 
+    Signal_Mbr <= '1'; -- Carrega o MBR
+    Signal_Enc <= '0'; -- Desabilita a gravação
+    Signal_A_Address <= "0001"; -- Seleciona AC
 
-    wait for 40 ns; 
- 
-  -- mbr := mem;
-  
-  Signal_Mem_to_mbr <= "0000000000000011"; -- intrucao
-  Signal_Data_ok <= '1'; -- Habilita leitura de MBR
+    wait;
 
+End Process LOCO_Process;
 
-    wait for 40 ns; -- soma
-
-    Signal_Amux <= '1';
-    Signal_Alu <= "00";
-    Signal_Mbr <= '0';
-    Signal_Enc <= '1';
-    Signal_C_Address <= "0010";
-    Signal_B_Address <= "0010";
-    Signal_A_Address <= "0000";
-    Signal_Data_ok <= '0'; -- desabilita leitura de MBR
-
-    wait for 40 ns; 
-
-    -- mbr := ac;
-
-    Signal_Enc <= '0'; -- desabilita gravação no registrador
-    Signal_Amux <= '0';
-    Signal_Alu <= "10";
-    Signal_Sh <= "00";
-    Signal_Mbr <= '1';
-    Signal_A_Address <= "0010";
-
-  wait;
-
-
-        
-END Process ADDD_Process;
 
 
 END Type_1;
